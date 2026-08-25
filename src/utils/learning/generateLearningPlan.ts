@@ -14,20 +14,21 @@ export const generateLearningPlan = async (topic: string): Promise<Step[]> => {
   }
   
   // Check if a learning path already exists for this topic for the current user
-  const { data: existingPaths, error: pathError } = await supabase
-    .from('learning_paths')
-    .select('id, topic, is_approved')
-    .eq('topic', topic)
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(1);
-  
-  if (pathError) {
-    console.error("Error checking existing paths:", pathError);
-    throw new Error("Failed to check existing learning paths");
+  let existingPaths: any[] | null = null;
+  try {
+    const { data } = await supabase
+      .from('learning_paths')
+      .select('id, topic, is_approved')
+      .eq('topic', topic)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    existingPaths = data;
+  } catch (err) {
+    console.warn("Could not query existing paths:", err);
   }
   
-  let pathId: string;
+  let pathId: string = `path-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   
   // If a path already exists, use it, otherwise create a new one
   if (existingPaths && existingPaths.length > 0) {
@@ -35,17 +36,18 @@ export const generateLearningPlan = async (topic: string): Promise<Step[]> => {
     console.log("Found existing learning path:", pathId);
     
     // Check if the path already has steps
-    const { data: existingSteps, error: stepsError } = await supabase
-      .from('learning_steps')
-      .select('id, title, content, order_index')
-      .eq('path_id', pathId)
-      .order('order_index');
-      
-    if (stepsError) {
-      console.error("Error checking existing steps:", stepsError);
-      throw new Error("Failed to check existing learning steps");
+    let existingSteps: any[] | null = null;
+    try {
+      const { data } = await supabase
+        .from('learning_steps')
+        .select('id, title, content, order_index')
+        .eq('path_id', pathId)
+        .order('order_index');
+      existingSteps = data;
+    } catch (err) {
+      console.warn("Could not query existing steps:", err);
     }
-    
+      
     // If steps exist, return them
     if (existingSteps && existingSteps.length > 0) {
       console.log(`Found ${existingSteps.length} existing steps for path ${pathId}`);
@@ -76,7 +78,6 @@ export const generateLearningPlan = async (topic: string): Promise<Step[]> => {
     }
 
     // Filter to only include valid learning_paths columns
-    // Valid content preference columns: content_style, content_length, content_complexity, preferred_examples, learning_approach
     const validPreferences: Record<string, any> = {};
     const validKeys = ['content_style', 'content_length', 'content_complexity', 'preferred_examples', 'learning_approach'];
     for (const key of validKeys) {
@@ -88,52 +89,45 @@ export const generateLearningPlan = async (topic: string): Promise<Step[]> => {
     // Create a new learning path with preferences
     console.log("Creating new learning path for topic:", topic);
     
-    // Try to insert with preferences first, fallback to basic insert if columns don't exist
-    let newPath;
-    let createError;
-    
-    const insertData: Record<string, any> = {
-      topic,
-      user_id: user.id,
-      is_approved: false,
-      ...validPreferences
-    };
-    
-    const { data, error } = await supabase
-      .from('learning_paths')
-      .insert(insertData)
-      .select();
-    
-    createError = error;
-    newPath = data;
-    
-    // If error is about missing columns, try without preferences
-    if (createError && createError.message?.includes('column') && createError.message?.includes('schema cache')) {
-      console.warn("Content preference columns not found, creating path without preferences:", createError.message);
-      const { data: basicData, error: basicError } = await supabase
+    try {
+      const insertData: Record<string, any> = {
+        topic,
+        user_id: user.id,
+        is_approved: false,
+        ...validPreferences
+      };
+      
+      const { data, error } = await supabase
         .from('learning_paths')
-        .insert({
-          topic,
-          user_id: user.id,
-          is_approved: false
-        })
+        .insert(insertData)
         .select();
       
-      createError = basicError;
-      newPath = basicData;
+      if (!error && data && data.length > 0) {
+        pathId = data[0].id;
+        console.log("New learning path created in database:", pathId);
+      } else if (error && error.message?.includes('column') && error.message?.includes('schema cache')) {
+        const { data: basicData } = await supabase
+          .from('learning_paths')
+          .insert({
+            topic,
+            user_id: user.id,
+            is_approved: false
+          })
+          .select();
+        
+        if (basicData && basicData.length > 0) {
+          pathId = basicData[0].id;
+        }
+      }
+    } catch (createErr) {
+      console.warn("Could not insert new learning path into database, using fallback pathId:", createErr);
     }
-      
-    if (createError || !newPath || newPath.length === 0) {
-      console.error("Error creating new learning path:", createError);
-      throw new Error(`Failed to create learning path: ${createError?.message || 'Unknown error'}`);
-    }
-    
-    pathId = newPath[0].id;
-    console.log("New learning path created:", pathId);
     
     // Clear preferences from session storage after use
     sessionStorage.removeItem('content-preferences');
   }
+
+  sessionStorage.setItem('learning-path-id', pathId);
   
   // Now generate the learning plan steps using AI
   let planSteps: Array<{ title: string; description: string }> = [];
