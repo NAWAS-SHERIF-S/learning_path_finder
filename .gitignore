@@ -52,3 +52,4 @@ supabase/.temp/
 # Misc
 *.tmp
 *.bak
+.vercel
