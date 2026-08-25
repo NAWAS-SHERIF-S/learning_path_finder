@@ -67,7 +67,7 @@ const PlanLoading = () => {
               delay: 0.3
             }}
           >
-            by Enterprise DNA
+            by Team techQ
           </motion.span>
         </motion.div>
 

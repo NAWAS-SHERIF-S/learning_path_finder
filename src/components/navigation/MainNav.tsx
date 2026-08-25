@@ -55,7 +55,7 @@ export function MainNav({ className }: MainNavProps) {
                 LearnFlow
               </span>
               <span className="text-[11px] font-semibold text-foreground/60 tracking-wide uppercase">
-                by Enterprise DNA
+                by Team techQ
               </span>
             </div>
           </Link>
@@ -138,7 +138,7 @@ export function MainNav({ className }: MainNavProps) {
                     LearnFlow
                   </span>
                   <span className="text-[10px] font-semibold text-foreground/60 tracking-wide uppercase mt-1">
-                    by Enterprise DNA
+                    by Team techQ
                   </span>
                 </div>
                 {user && (

@@ -81,7 +81,7 @@ const ForgotPassword = () => {
                   LearnFlow
                 </h1>
               </div>
-              <p className="text-sm font-semibold text-gray-600 mt-3 tracking-wide uppercase">by Enterprise DNA</p>
+              <p className="text-sm font-semibold text-gray-600 mt-3 tracking-wide uppercase">by Team techQ</p>
             </div>
           </div>
 

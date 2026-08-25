@@ -21,7 +21,7 @@ export const PromptInsights = () => {
     );
   }
 
-  if (!insights || insights.unansweredQuestions.length === 0) {
+  if (!insights || !Array.isArray(insights.unansweredQuestions) || insights.unansweredQuestions.length === 0) {
     return null;
   }
 
@@ -79,7 +79,7 @@ export const PromptInsights = () => {
                   <h3 className="text-lg font-semibold text-[#0b0c18] mb-2 group-hover:text-[#6654f5] transition-colors">
                     {question.topic}
                   </h3>
-                  {question.samplePrompts.length > 0 && (
+                  {Array.isArray(question.samplePrompts) && question.samplePrompts.length > 0 && (
                     <p className="text-sm text-[#0b0c18]/60 font-light line-clamp-2">
                       "{question.samplePrompts[0]}..."
                     </p>
@@ -96,7 +96,7 @@ export const PromptInsights = () => {
         </div>
 
         {/* Suggested Topics */}
-        {insights.suggestedTopics.length > 0 && (
+        {Array.isArray(insights.suggestedTopics) && insights.suggestedTopics.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
