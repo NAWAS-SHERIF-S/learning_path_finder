@@ -672,14 +672,20 @@ export const mockSupabase = {
           paths.push(planData);
           setStorageJson('mock_db_learning_paths', paths);
 
-          // Save default steps to db
-          const steps = [];
-          for (let i = 0; i < totalSteps; i++) {
+          const generatedSteps = [
+            { title: `Foundations of ${topic}`, description: `Learn the fundamentals, environment setup, and basic syntax of ${topic}.` },
+            { title: `Core Concepts & Workflows in ${topic}`, description: `Master essential structures, functions, and key workflows in ${topic}.` },
+            { title: `Practical Implementation & Building`, description: `Build practical scripts and modules to solve real-world problems.` },
+            { title: `Advanced Techniques & Integration`, description: `Implement error handling, optimization, and integrations.` },
+            { title: `Capstone Project & Best Practices`, description: `Design and publish a production-ready end-to-end ${topic} project.` }
+          ];
+
+          for (let i = 0; i < generatedSteps.length; i++) {
             steps.push({
               id: uuid(),
               path_id: planData.id,
-              title: `Step ${i + 1}: Foundations of ${topic}`,
-              description: `A foundational step covering concepts in section ${i + 1}.`,
+              title: generatedSteps[i].title,
+              description: generatedSteps[i].description,
               step_number: i + 1,
               detailed_content: null,
               created_at: new Date().toISOString()
@@ -688,7 +694,7 @@ export const mockSupabase = {
           const allSteps = getStorageJson('mock_db_learning_steps', []);
           setStorageJson('mock_db_learning_steps', [...allSteps, ...steps]);
 
-          return { data: planData, error: null };
+          return { data: { ...planData, steps: generatedSteps }, error: null };
         }
 
         // Return step contents
