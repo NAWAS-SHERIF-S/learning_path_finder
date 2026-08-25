@@ -68,7 +68,7 @@ const AuthPage = () => {
                 LearnFlow
               </span>
               <span className="text-sm text-white/60 leading-tight">
-                by Enterprise DNA
+                by Team techQ
               </span>
             </div>
           </motion.div>

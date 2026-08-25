@@ -39,7 +39,7 @@ export const HomeFooter = () => {
 
         <div className="mt-8 text-center md:text-left">
           <p className="text-sm text-muted-foreground">
-            Open source under the MIT License. Originally released as LearnFlow by Enterprise DNA.
+            Open source under the MIT License. Developed by Team techQ.
           </p>
         </div>
       </div>

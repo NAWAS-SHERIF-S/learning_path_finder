@@ -34,7 +34,8 @@ export const PredictiveRecommendations = () => {
   };
 
   // Clean topic name (remove prefixes like "Deep dive:", "Reinforce", etc.)
-  const cleanTopicName = (topic: string): string => {
+  const cleanTopicName = (topic?: string): string => {
+    if (!topic) return '';
     return topic
       .replace(/^(Deep dive|Reinforce|Build a|Goal):\s*/i, '')
       .trim();
@@ -43,10 +44,12 @@ export const PredictiveRecommendations = () => {
   // Sort recommendations by priority and confidence
   const sortedRecommendations = [...recommendations].sort((a, b) => {
     const priorityOrder = { high: 3, medium: 2, low: 1 };
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    const priorityA = priorityOrder[a?.priority] || 1;
+    const priorityB = priorityOrder[b?.priority] || 1;
+    if (priorityA !== priorityB) {
+      return priorityB - priorityA;
     }
-    return b.confidence - a.confidence;
+    return (b?.confidence || 0) - (a?.confidence || 0);
   });
 
   return (
@@ -70,15 +73,16 @@ export const PredictiveRecommendations = () => {
             <span className="text-gradient">Paths</span>
           </h2>
           <p className="text-lg text-[#0b0c18]/70 max-w-2xl mx-auto font-light">
-            Based on your learning history, questions, and goals. Click any card to start learning instantly.
+            Based on your activity, we've identified the best paths to accelerate your progress.
           </p>
         </div>
 
         {/* All Recommendations Grid - Always 8 cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {sortedRecommendations.map((rec, index) => {
-            const isHighPriority = rec.priority === 'high';
-            const cleanTopic = cleanTopicName(rec.topic);
+          {sortedRecommendations.map((rec: any, index) => {
+            const isHighPriority = rec?.priority === 'high';
+            const rawTopic = rec?.topic || rec?.title || '';
+            const cleanTopic = cleanTopicName(rawTopic);
             
             return (
               <motion.div
