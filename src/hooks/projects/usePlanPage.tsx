@@ -50,14 +50,21 @@ export const usePlanPage = () => {
         setSteps(plan);
 
         if (plan.length > 0) {
-          const { data: stepData, error } = await supabase
-            .from('learning_steps')
-            .select('path_id')
-            .eq('id', plan[0].id)
-            .single();
+          const storedPathId = sessionStorage.getItem("learning-path-id");
+          if (storedPathId) {
+            setPathId(storedPathId);
+          } else {
+            const { data: stepData } = await supabase
+              .from('learning_steps')
+              .select('path_id')
+              .eq('id', plan[0].id)
+              .maybeSingle();
 
-          if (!error && stepData) {
-            setPathId(stepData.path_id);
+            if (stepData && stepData.path_id) {
+              setPathId(stepData.path_id);
+            } else {
+              setPathId(`path-${Date.now()}`);
+            }
           }
         }
       } catch (error) {
