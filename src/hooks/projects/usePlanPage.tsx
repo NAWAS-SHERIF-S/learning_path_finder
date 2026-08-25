@@ -19,47 +19,45 @@ export const usePlanPage = () => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-    
-    checkAuth();
-  }, []);
+    const searchParams = new URLSearchParams(window.location.search);
+    const topicFromUrl = searchParams.get("topic");
+    const storedTopic = topicFromUrl || sessionStorage.getItem("learn-topic");
 
-  useEffect(() => {
-    const storedTopic = sessionStorage.getItem("learn-topic");
-    
     if (!storedTopic) {
       navigate("/");
       return;
     }
-    
+
     setTopic(storedTopic);
-    
-    const fetchPlan = async () => {
+    sessionStorage.setItem("learn-topic", storedTopic);
+
+    const checkAuthAndFetchPlan = async () => {
+      setLoading(true);
+      setAuthError(false);
+
+      const { data } = await supabase.auth.getUser();
+      const currentUser = data?.user;
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setAuthError(true);
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (!user) {
-          setAuthError(true);
-          setLoading(false);
-          return;
-        }
-        
-        setLoading(true);
-        setAuthError(false);
-        
         const plan = await generateLearningPlan(storedTopic);
         setSteps(plan);
-        
+
         if (plan.length > 0) {
-          const { data, error } = await supabase
+          const { data: stepData, error } = await supabase
             .from('learning_steps')
             .select('path_id')
             .eq('id', plan[0].id)
             .single();
-            
-          if (!error && data) {
-            setPathId(data.path_id);
+
+          if (!error && stepData) {
+            setPathId(stepData.path_id);
           }
         }
       } catch (error) {
@@ -72,13 +70,9 @@ export const usePlanPage = () => {
         setLoading(false);
       }
     };
-    
-    if (user) {
-      fetchPlan();
-    } else {
-      setLoading(false);
-    }
-  }, [navigate, user]);
+
+    checkAuthAndFetchPlan();
+  }, [navigate]);
 
   const handleApprove = async () => {
     if (!pathId || !topic) {
