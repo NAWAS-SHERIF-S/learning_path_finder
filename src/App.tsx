@@ -14,6 +14,9 @@ import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import Community from './pages/Community';
 import AdminGenerateTopics from './pages/AdminGenerateTopics';
+import AudioPage from './pages/AudioPage';
+import PodcastPage from './pages/PodcastPage';
+import NotFound from './pages/NotFound';
 
 function AppContent() {
   return (
@@ -33,6 +36,9 @@ function AppContent() {
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/admin/generate-topics" element={<AdminGenerateTopics />} />
+      <Route path="/audio" element={<AudioPage />} />
+      <Route path="/podcast" element={<PodcastPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

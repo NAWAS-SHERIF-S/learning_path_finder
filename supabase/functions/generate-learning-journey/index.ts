@@ -63,42 +63,78 @@ Return ONLY this JSON structure:
 }`;
         break;
 
-      case 'generate-plan':
-        systemPrompt += ' Create a detailed, actionable learning plan.';
-        const skillsList = skills?.map(s => `${s.name} (${s.level})`).join(', ');
-        prompt = `Create a personalized learning plan for someone learning "${topic?.title}" with these selected skills: ${skillsList}
+      case 'generate-plan': {
+  systemPrompt += ' Create a detailed, actionable learning plan.';
+  const skillsList = skills?.map(s => `${s.name} (${s.level})`).join(', ');
+  // Prompt to generate the learning plan JSON
+  prompt = `Create a personalized learning plan for someone learning "${topic?.title}" with these selected skills: ${skillsList}\n\nReturn a JSON object with this structure:\n{\n  "title": "Personalized plan title",\n  "description": "Overview of what they'll achieve",\n  "totalDuration": "e.g., 12 weeks",\n  "weeklyCommitment": "e.g., 10-15 hours",\n  "milestones": [\n    {\n      "week": 1,\n      "title": "Milestone title",\n      "description": "What they'll accomplish",\n      "tasks": ["Task 1", "Task 2", "Task 3"]\n    }\n  ],\n  "firstProject": {\n    "title": "Project name",\n    "description": "What they'll build",\n    "skills": ["Skill 1", "Skill 2"],\n    "estimatedTime": "e.g., 8 hours"\n  },\n  "resources": [\n    {\n      "type": "video|article|course|documentation",\n      "title": "Resource title",\n      "duration": "e.g., 2 hours",\n      "free": true\n    }\n  ],\n  "nextSteps": ["Step 1", "Step 2", "Step 3"]\n}`;
+  // First AI call – generate the plan
+  const planResponse = await aiClient.chat({
+    functionType: 'content-generation',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt }
+    ],
+    maxTokens: 3000,
+    temperature: 0.7,
+    responseFormat: 'json_object'
+  });
 
-Return a JSON object with this structure:
-{
-  "title": "Personalized plan title",
-  "description": "Overview of what they'll achieve",
-  "totalDuration": "e.g., 12 weeks",
-  "weeklyCommitment": "e.g., 10-15 hours",
-  "milestones": [
-    {
-      "week": 1,
-      "title": "Milestone title",
-      "description": "What they'll accomplish",
-      "tasks": ["Task 1", "Task 2", "Task 3"]
+  let planObj: any;
+  try {
+    if (!planResponse.content) throw new Error('Empty response from AI');
+    const parsed = JSON.parse(planResponse.content);
+    // The API may wrap the plan inside a `plan` key or return it directly
+    planObj = parsed.plan ? parsed.plan : parsed;
+  } catch (parseError) {
+    console.error('Failed to parse learning plan:', planResponse.content);
+    throw new Error('Invalid learning plan format from AI');
+  }
+
+  // -------------------------------------------------
+  // SECOND CALL – generate reasoning for each task
+  // -------------------------------------------------
+  const flatTasks: string[] = (planObj.milestones ?? []).flatMap((m: any) => m.tasks ?? []);
+  let reasonings: string[] = [];
+  if (flatTasks.length) {
+    const reasoningPrompt = `You are an expert learning advisor. For each of the following learning tasks, provide a concise explanation (1‑2 sentences) of why this specific task is recommended for the learner given their goal and current skills. Return a JSON object with a single field "reasonings" that is an array matching the order of the tasks.\n\nTasks:\n${flatTasks.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+    try {
+      const reasoningResponse = await aiClient.chat({
+        functionType: 'content-generation',
+        messages: [
+          { role: 'system', content: 'Provide reasoning for each learning task.' },
+          { role: 'user', content: reasoningPrompt }
+        ],
+        maxTokens: 2000,
+        temperature: 0.7,
+        responseFormat: 'json_object'
+      });
+      const parsed = JSON.parse(reasoningResponse.content ?? '{}');
+      reasonings = Array.isArray(parsed.reasonings) ? parsed.reasonings : [];
+    } catch (e) {
+      console.error('Reasoning generation failed:', e);
     }
-  ],
-  "firstProject": {
-    "title": "Project name",
-    "description": "What they'll build",
-    "skills": ["Skill 1", "Skill 2"],
-    "estimatedTime": "e.g., 8 hours"
-  },
-  "resources": [
-    {
-      "type": "video|article|course|documentation",
-      "title": "Resource title",
-      "duration": "e.g., 2 hours",
-      "free": true/false
+  }
+
+  // Attach reasoning to each milestone task (preserve original ordering)
+  if (reasonings.length) {
+    let idx = 0;
+    for (const milestone of planObj.milestones ?? []) {
+      if (Array.isArray(milestone.tasks)) {
+        milestone.tasks = milestone.tasks.map((task: string) => {
+          const reasoning = reasonings[idx++] || '';
+          return { title: task, reasoning };
+        });
+      }
     }
-  ],
-  "nextSteps": ["Step 1", "Step 2", "Step 3"]
-}`;
-        break;
+  }
+
+  const normalized = { plan: planObj };
+  return new Response(JSON.stringify(normalized), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status: 200,
+  });
+}
 
       default:
         throw new Error('Invalid action');

@@ -210,11 +210,11 @@ export const LearningDNA = () => {
           >
             <h3 className="text-xl font-semibold text-[#0b0c18] mb-6">Your Learning Patterns</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {profile?.preferredLearningTimes.length > 0 && (
+              {(profile?.preferredLearningTimes?.length ?? 0) > 0 && (
                 <div>
-                  <div className="text-sm text-[#0b0c18]/60 font-light mb-2">Optimal Learning Times</div>
+                  <div className="text-[#0b0c18]/60 font-light text-sm mb-2">Optimal Learning Times</div>
                   <div className="flex flex-wrap gap-2">
-                    {profile.preferredLearningTimes.map((time, idx) => (
+                    {profile?.preferredLearningTimes?.map((time, idx) => (
                       <span
                         key={idx}
                         className="px-3 py-1 rounded-full bg-gradient-to-r from-[#6654f5]/10 to-[#ca5a8b]/10 text-[#6654f5] text-sm font-medium"
@@ -227,31 +227,31 @@ export const LearningDNA = () => {
               )}
               {contentPreferences?.preferredExamples?.value && (
                 <div>
-                  <div className="text-sm text-[#0b0c18]/60 font-light mb-2 flex items-center gap-2">
+                  <div className="text-[#0b0c18]/60 font-light text-sm mb-2 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#f2b347]" />
                     Preferred Examples
                   </div>
-                  <div className="text-lg font-semibold text-[#0b0c18]">
+                  <div className="text-[#0b0c18] font-semibold text-lg">
                     {formatPreferenceLabel(contentPreferences.preferredExamples.value)}
                   </div>
-                  <div className="text-xs text-[#0b0c18]/50 font-light mt-1">
+                  <div className="text-[#0b0c18]/50 font-light text-xs mt-1">
                     Used in {contentPreferences.preferredExamples.percentage}% of your projects
                   </div>
                 </div>
               )}
               {profile?.devicePreference && (
                 <div>
-                  <div className="text-sm text-[#0b0c18]/60 font-light mb-2">Preferred Device</div>
-                  <div className="text-lg font-semibold text-[#0b0c18] capitalize">
+                  <div className="text-[#0b0c18]/60 font-light text-sm mb-2">Preferred Device</div>
+                  <div className="text-[#0b0c18] font-semibold text-lg capitalize">
                     {profile.devicePreference}
                   </div>
                 </div>
               )}
-              {profile?.mostEngagedTopics.length > 0 && (
+              {(profile?.mostEngagedTopics?.length ?? 0) > 0 && (
                 <div>
-                  <div className="text-sm text-[#0b0c18]/60 font-light mb-2">Most Engaged Topics</div>
+                  <div className="text-[#0b0c18]/60 font-light text-sm mb-2">Most Engaged Topics</div>
                   <div className="flex flex-wrap gap-2">
-                    {profile.mostEngagedTopics.slice(0, 3).map((topic, idx) => (
+                    {profile?.mostEngagedTopics?.slice(0, 3).map((topic, idx) => (
                       <span
                         key={idx}
                         className="px-3 py-1 rounded-full bg-gradient-to-r from-[#f2b347]/10 to-[#ca5a8b]/10 text-[#ca5a8b] text-sm font-medium"

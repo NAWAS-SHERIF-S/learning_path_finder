@@ -14,11 +14,13 @@ export function useContentGeneration(steps: any[], pathId: string | null, topic:
 
   // Removed background fan-out. Content is generated per-step on first view.
   useEffect(() => {
-    if (steps.length > 0 && pathId && topic && !stepId) {
+    if (steps.length > 0 && pathId && topic) {
       // Keep initial state consistent; actual generation status comes from useLearningSteps updates
       setGeneratingContent(false);
+      // We have the steps (outline) loaded, so initial loading is complete!
+      setInitialLoading(false);
     }
-  }, [steps, pathId, topic, stepId]);
+  }, [steps, pathId, topic]);
 
   // Update generation status when background process progresses
   const updateGenerationStatus = useCallback((bgGenerating: boolean, bgGenerated: number, stepsLength: number, hasStepId: boolean) => {
