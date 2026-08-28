@@ -20,6 +20,8 @@ import { useProjectCompletion } from "@/components/content/ProjectCompletion";
 import DeepDiveSection from "@/components/content/deep-dive/DeepDiveSection";
 import AIContentModal from "@/components/content/modals/AIContentModal";
 
+import LearningOverview from "@/components/content/LearningOverview";
+
 const ContentPage = () => {
   const {
     pathId,
@@ -165,7 +167,8 @@ const ContentPage = () => {
   // Note: Redirect logic is handled in useContentNavigation hook to avoid duplicate redirects
 
   // Show loading screen ONLY on the path-level route (no stepIndex)
-  if ((isLoading || generatingContent) && !stepIndex) {
+  // We use steps.length === 0 to know if we are still fetching the initial steps from the database
+  if ((isLoading || steps.length === 0) && !stepIndex) {
     return <KnowledgeNuggetLoading 
              topic={topic} 
              goToProjects={goToProjects} 
@@ -227,6 +230,19 @@ const ContentPage = () => {
       await handleMarkComplete();
     }
   };
+
+  // If no stepIndex is provided, display the overview page instead of standard step content
+  if (!stepIndex) {
+    return (
+      <LearningOverview
+        topic={topic}
+        steps={steps}
+        pathId={pathId}
+        navigateToStep={(idx) => navigateToStep(idx)}
+        goToProjects={goToProjects}
+      />
+    );
+  }
 
   // Ensure content is a string
   const safeContent = typeof currentStepData?.content === 'string' ? currentStepData.content : currentStepData?.content ? JSON.stringify(currentStepData.content) : "No content available";

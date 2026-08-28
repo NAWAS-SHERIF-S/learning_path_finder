@@ -101,6 +101,70 @@ class MockQueryBuilder {
     return this;
   }
 
+  not(column: string, operator: string, value: any) {
+    this.filters.push((item) => {
+      if (operator === 'is' && value === null) {
+        return item[column] !== null && item[column] !== undefined;
+      }
+      return String(item[column]) !== String(value);
+    });
+    return this;
+  }
+
+  is(column: string, value: any) {
+    this.filters.push((item) => {
+      if (value === null) {
+        return item[column] === null || item[column] === undefined;
+      }
+      return item[column] === value;
+    });
+    return this;
+  }
+
+  gte(column: string, value: any) {
+    this.filters.push((item) => {
+      if (item[column] === undefined || item[column] === null) return false;
+      const tItem = new Date(item[column]).getTime();
+      const tVal = new Date(value).getTime();
+      if (!isNaN(tItem) && !isNaN(tVal)) return tItem >= tVal;
+      return item[column] >= value;
+    });
+    return this;
+  }
+
+  gt(column: string, value: any) {
+    this.filters.push((item) => {
+      if (item[column] === undefined || item[column] === null) return false;
+      const tItem = new Date(item[column]).getTime();
+      const tVal = new Date(value).getTime();
+      if (!isNaN(tItem) && !isNaN(tVal)) return tItem > tVal;
+      return item[column] > value;
+    });
+    return this;
+  }
+
+  lte(column: string, value: any) {
+    this.filters.push((item) => {
+      if (item[column] === undefined || item[column] === null) return false;
+      const tItem = new Date(item[column]).getTime();
+      const tVal = new Date(value).getTime();
+      if (!isNaN(tItem) && !isNaN(tVal)) return tItem <= tVal;
+      return item[column] <= value;
+    });
+    return this;
+  }
+
+  lt(column: string, value: any) {
+    this.filters.push((item) => {
+      if (item[column] === undefined || item[column] === null) return false;
+      const tItem = new Date(item[column]).getTime();
+      const tVal = new Date(value).getTime();
+      if (!isNaN(tItem) && !isNaN(tVal)) return tItem < tVal;
+      return item[column] < value;
+    });
+    return this;
+  }
+
   in(column: string, values: any[]) {
     this.filters.push((item) => values.map(String).includes(String(item[column])));
     return this;

@@ -59,12 +59,12 @@ export const useContentNavigation = () => {
   // Handle redirect to first step when generation completes
   useEffect(() => {
     // Only redirect if we're not already on a step page and generation is complete
+    // We NO LONGER auto-redirect, so the user can see the Learning Overview page
     if (!hasRedirected && !initialLoading && !generatingContent && pathId && steps.length > 0 && !stepIndex) {
-      console.log("Content generation complete. Navigating to first content page...");
+      console.log("Content generation complete. Displaying learning overview...");
       setHasRedirected(true);
-      navigateToStep(0);
+      // Removed navigateToStep(0);
     }
-    // Note: generatedSteps removed from deps to prevent cascading re-runs - we only care about generatingContent state
   }, [generatingContent, steps.length, pathId, hasRedirected, stepIndex, initialLoading, navigateToStep]);
 
   // Wrap markStepAsComplete to pass it to the step navigation hook
