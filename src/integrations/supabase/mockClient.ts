@@ -766,13 +766,13 @@ export const mockSupabase = {
 
       // Voice processing functions
       if (name === 'text-to-speech' || name === 'openai-tts') {
-        const text = body.text || 'Sample audio text';
+        // Return an error to force the frontend to use the window.speechSynthesis fallback 
+        // because we cannot easily mock an actual TTS generation locally without a service.
         return {
-          data: {
-            audioUrl: 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg',
-            message: `Generated audio for: ${text.substring(0, 20)}...`
-          },
-          error: null
+          data: null,
+          error: {
+            message: "Local mock for TTS is not supported. Please use the browser speech synthesis fallback."
+          }
         };
       }
 

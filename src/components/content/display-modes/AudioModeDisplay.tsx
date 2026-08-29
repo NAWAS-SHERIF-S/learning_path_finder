@@ -29,12 +29,9 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
   const [selectedVoice, setSelectedVoice] = useState<OpenAIVoice>('alloy');
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
 
-  // Clean up content for text-to-speech
   const cleanedContent = useMemo(() => {
     if (!content) return "";
-
     const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-
     return contentStr
       .replace(/#{1,6}\s/g, '')
       .replace(/\*\*/g, '')
@@ -44,22 +41,30 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
       .trim();
   }, [content]);
 
-  const { isGenerating, audioUrl, error, generateSpeech, cleanup } = useTextToSpeech();
+  const { isGenerating, audioUrl, fallbackText, error, generateSpeech, cleanup } = useTextToSpeech();
+  
+  // NOTE: fallbackText is required by the updated useAudioPlayerState hook.
+  // Ensure the hook supports it, otherwise it defaults to audioUrl only.
   const {
     audioRef,
     isPlaying,
     isMuted,
-    isAudioLoaded,
+    isEnded,
+    currentTime,
+    duration,
     handleTogglePlay,
-    handleMuteToggle
-  } = useAudioPlayerState(audioUrl);
+    handleMuteToggle,
+    seek,
+    pause,
+    stop
+  } = useAudioPlayerState(audioUrl, fallbackText, selectedVoice) as any;
 
   React.useEffect(() => {
     return () => cleanup();
   }, [cleanup]);
 
   const handlePlayClick = async () => {
-    if (!audioUrl && !isGenerating) {
+    if (!audioUrl && !fallbackText && !isGenerating) {
       try {
         await generateSpeech(cleanedContent, pathId, { provider: 'openai', voice: selectedVoice });
       } catch (err) {
@@ -70,25 +75,38 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
     }
   };
 
-  const handleRetry = async () => {
-    if (!isGenerating) {
-      try {
-        cleanup();
-        await generateSpeech(cleanedContent, pathId, { provider: 'openai', voice: selectedVoice });
-      } catch (err) {
-        console.error("Failed to generate speech:", err);
-      }
+  const handleStopClick = () => {
+    if (stop) {
+      stop();
+    }
+  };
+
+  const handleReplayClick = () => {
+    if (seek) {
+      seek(0);
+    }
+    if (!isPlaying) {
+      handleTogglePlay();
     }
   };
 
   const handleVoiceChange = (value: string) => {
     setSelectedVoice(value as OpenAIVoice);
-    if (audioUrl) cleanup();
+    if (audioUrl || fallbackText) cleanup();
   };
 
   const initialPrompt = cleanedContent
     ? `This is the content: ${cleanedContent.substring(0, 200)}... Continue discussing this topic.`
     : `I'm learning about ${topic}. Can you help me understand this better?`;
+
+  const formatTime = (time: number) => {
+    if (isNaN(time) || !isFinite(time)) return "00:00";
+    const m = Math.floor(time / 60).toString().padStart(2, '0');
+    const s = Math.floor(time % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const hasAudio = !!(audioUrl || fallbackText);
 
   return (
     <>
@@ -99,28 +117,30 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
         className="max-w-4xl mx-auto"
       >
         <div className="grid gap-8 md:grid-cols-2">
-          {/* Audio Player Card - Minimalist Design */}
+          {/* Audio Player Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-3xl p-10 overflow-hidden"
+            className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-3xl p-10 overflow-hidden shadow-xl"
           >
-            {/* Subtle background gradient accent */}
             <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-brand-accent/5" />
 
-            <div className="relative z-10 space-y-8">
-              {/* Title Section */}
+            <div className="relative z-10 space-y-6">
               <div className="space-y-3">
                 <h3 className="text-2xl font-bold text-white tracking-tight">
                   {title || 'Introduction to Database Fundamentals'}
                 </h3>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-400">
-                    {isGenerating ? 'Preparing audio...' : audioUrl ? (isPlaying ? 'Now playing' : 'Ready to play') : 'Click play to generate and listen'}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <p className="text-sm text-brand-accent font-medium">
+                    {isGenerating 
+                      ? 'Preparing audio lesson...' 
+                      : hasAudio 
+                        ? (isEnded ? 'Lesson completed' : isPlaying ? 'Playing lesson...' : 'Paused') 
+                        : 'Click play to start lesson'}
                   </p>
                   <Select value={selectedVoice} onValueChange={handleVoiceChange}>
-                    <SelectTrigger className="w-32 bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 transition-colors text-xs">
+                    <SelectTrigger className="w-32 bg-gray-800/80 border-gray-700 text-gray-300 hover:bg-gray-700 transition-colors text-xs h-8">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
@@ -133,67 +153,105 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
               </div>
 
               {/* Progress/Loading Bar */}
-              {isGenerating && (
-                <div className="space-y-2">
+              {isGenerating ? (
+                <div className="space-y-2 py-4">
                   <BarLoader className="w-full" />
                 </div>
-              )}
+              ) : hasAudio ? (
+                <div className="space-y-3 pt-2">
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 100}
+                    value={currentTime || 0}
+                    onChange={(e) => seek && seek(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                    style={{
+                      background: `linear-gradient(to right, var(--tw-colors-brand-primary, #6366f1) ${((currentTime || 0) / (duration || 1)) * 100}%, #374151 ${((currentTime || 0) / (duration || 1)) * 100}%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 font-medium">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+              ) : null}
 
-              {/* Play Button - Large and Central */}
-              <div className="flex items-center justify-center pt-6 pb-4">
+              {/* Main Play Controls */}
+              <div className="flex items-center justify-center gap-4 pt-2 pb-2">
+                {/* Play / Pause / Resume */}
                 <Button
                   onClick={handlePlayClick}
-                  disabled={isGenerating && !audioUrl}
-                  className="h-20 w-20 bg-gradient-to-br from-brand-primary to-brand-accent hover:from-brand-primary/90 hover:to-brand-accent/90 text-white rounded-full shadow-2xl transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={isGenerating && !hasAudio}
+                  className={cn(
+                    "h-16 w-16 bg-gradient-to-br from-brand-primary to-brand-accent hover:from-brand-primary/90 hover:to-brand-accent/90 text-white rounded-full shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed",
+                    isPlaying ? "shadow-[0_0_20px_rgba(99,102,241,0.4)]" : ""
+                  )}
+                  title={isPlaying ? "Pause" : isEnded ? "Play Again" : "Play / Resume"}
                 >
                   {isGenerating ? (
-                    <Loader2 className="h-9 w-9 animate-spin" />
+                    <Loader2 className="h-7 w-7 animate-spin" />
                   ) : isPlaying ? (
-                    <Pause className="h-9 w-9" />
+                    <Pause className="h-7 w-7" />
                   ) : (
-                    <Play className="h-9 w-9 ml-1" />
+                    <Play className="h-7 w-7 ml-1" />
                   )}
                 </Button>
-              </div>
 
-              {/* Secondary Controls - Minimal */}
-              <div className="flex items-center justify-center gap-6">
-                {audioUrl && !isGenerating && (
+                {/* Stop Button */}
+                {hasAudio && (
                   <Button
-                    onClick={handleRetry}
-                    variant="ghost"
-                    className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all text-sm"
+                    onClick={handleStopClick}
+                    variant="outline"
+                    className="h-14 w-14 bg-gray-800/80 border-gray-700 hover:bg-red-900/40 hover:text-red-400 hover:border-red-900/60 text-gray-300 rounded-full transition-all duration-300 shadow-md"
+                    title="Stop"
                   >
-                    Regenerate
+                    <div className="h-4 w-4 bg-current rounded-sm" />
                   </Button>
                 )}
+
+                {/* Replay Button */}
+                {hasAudio && (
+                  <Button
+                    onClick={handleReplayClick}
+                    variant="outline"
+                    className="h-14 w-14 bg-gray-800/80 border-gray-700 hover:bg-gray-700 hover:text-white text-gray-300 rounded-full transition-all duration-300 shadow-md"
+                    title="Replay from beginning"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </Button>
+                )}
+              </div>
+
+              {/* Secondary Controls */}
+              <div className="flex items-center justify-center gap-6">
                 <Button
                   onClick={handleMuteToggle}
                   variant="ghost"
-                  disabled={!audioUrl}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all disabled:opacity-20 text-sm"
+                  disabled={!hasAudio}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all disabled:opacity-20 text-sm h-8 px-3 rounded-full"
                 >
                   {isMuted ? "Unmute" : "Mute"}
                 </Button>
               </div>
 
-              {/* Error Display */}
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-red-950/30 border border-red-900/50 rounded-xl text-red-400 text-sm"
+                  className="p-3 bg-red-950/40 border border-red-900/60 rounded-xl text-red-400 text-sm text-center font-medium"
                 >
                   {error}
                 </motion.div>
               )}
             </div>
 
-            {/* Hidden Audio Element */}
             <audio ref={audioRef} controls={false} className="hidden" />
           </motion.div>
 
-          {/* Voice Assistant Card - Clean Design */}
+          {/* Voice Assistant Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -201,10 +259,13 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
             className="h-full"
           >
             <motion.div
-              onClick={() => setShowVoiceOverlay(true)}
+              onClick={() => {
+                if (pause) pause(); // Pause standard playback when entering conversation
+                setShowVoiceOverlay(true);
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="group h-full cursor-pointer rounded-3xl p-10 bg-white hover:bg-gray-50 transition-all duration-300 flex flex-col justify-center"
+              className="group h-full cursor-pointer rounded-3xl p-10 bg-white hover:bg-gray-50 shadow-sm transition-all duration-300 flex flex-col justify-center border border-gray-100"
             >
               <div className="space-y-4">
                 <div>
@@ -212,12 +273,12 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
                     Voice Assistant
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Have a quick conversation about {topic}
+                    Have a quick interactive conversation about {topic} to test your knowledge.
                   </p>
                 </div>
 
                 <div className="pt-4">
-                  <div className="inline-flex items-center text-brand-primary group-hover:gap-3 gap-2 transition-all duration-300 font-medium">
+                  <div className="inline-flex items-center text-brand-primary group-hover:gap-3 gap-2 transition-all duration-300 font-semibold">
                     <span>Start conversation</span>
                     <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -230,7 +291,6 @@ const AudioModeDisplay: React.FC<AudioModeDisplayProps> = ({
         </div>
       </motion.div>
 
-      {/* Interactive Voice Overlay */}
       <InteractiveVoiceOverlay
         isOpen={showVoiceOverlay}
         onClose={() => setShowVoiceOverlay(false)}

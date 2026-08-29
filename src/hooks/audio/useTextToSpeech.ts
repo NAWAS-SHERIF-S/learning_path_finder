@@ -16,6 +16,7 @@ export interface TextToSpeechOptions {
 export function useTextToSpeech() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [fallbackText, setFallbackText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   // Add these properties for script generation
@@ -39,16 +40,15 @@ export function useTextToSpeech() {
     
     setIsGenerating(true);
     setError(null);
+    setFallbackText(null);
     
     const provider = options.provider || 'openai'; // Default to OpenAI
     
     try {
       console.log(`Generating speech using ${provider} for path ${pathId} with text length ${text.length}`);
       
-      // Determine which endpoint to call based on provider
       const endpoint = provider === 'openai' ? EDGE_FUNCTIONS.textToSpeechOpenAI : EDGE_FUNCTIONS.textToSpeechElevenLabs;
       
-      // Call the Supabase Edge Function
       const response = await supabase.functions.invoke(endpoint, {
         body: { 
           text,
@@ -75,19 +75,12 @@ export function useTextToSpeech() {
     } catch (err: any) {
       console.error('Error generating speech:', err);
       
-      // Fallback to browser's native text-to-speech if the API fails
+      // Fallback to returning text so the AudioPlayer can handle SpeechSynthesis
       if ('speechSynthesis' in window) {
         console.log('Falling back to browser text-to-speech');
-        try {
-          const utterance = new SpeechSynthesisUtterance(text);
-          window.speechSynthesis.speak(utterance);
-          
-          // We can't return a URL for native TTS, but we can prevent the error state
-          toast.success('Playing audio via browser fallback');
-          return null; // Return null so the UI doesn't expect an audio blob to play
-        } catch (fallbackErr) {
-          console.error('Fallback TTS also failed:', fallbackErr);
-        }
+        setFallbackText(text);
+        toast.success('Playing audio via browser fallback');
+        return null;
       }
 
       const errorMsg = err.message || 'Unknown error occurred';
@@ -99,24 +92,19 @@ export function useTextToSpeech() {
     }
   };
 
-  // Script generation function for the AudioSummaryPlayer
   const generateScript = async (steps: any[], topic: string) => {
     setIsGeneratingScript(true);
     setError(null);
     
     try {
-      // Generate a summary script from the learning steps
       if (!steps || steps.length === 0) {
         throw new Error('No steps available to generate a script');
       }
       
-      // Create a more structured script with better formatting
       const introduction = `Here's a summary of what you'll learn about ${topic}:\n\n`;
       
-      // Get content from each step, focusing on the title and first part
       const stepsContent = steps.map((step, index) => {
         const content = step.detailed_content || step.content || '';
-        // Extract first paragraph or a portion of the content
         const firstParagraph = content.split('\n')[0] || content.substring(0, 150);
         return `Step ${index + 1}: ${step.title}\n${firstParagraph}\n`;
       }).join('\n\n');
@@ -141,6 +129,7 @@ export function useTextToSpeech() {
     if (audioUrl) {
       setAudioUrl(null);
     }
+    setFallbackText(null);
     setError(null);
     setScriptContent(null);
   }, [audioUrl]);
@@ -148,6 +137,7 @@ export function useTextToSpeech() {
   return {
     isGenerating,
     audioUrl,
+    fallbackText,
     error,
     generateSpeech,
     cleanup,
