@@ -74,6 +74,22 @@ export function useTextToSpeech() {
       return response.data.audioUrl;
     } catch (err: any) {
       console.error('Error generating speech:', err);
+      
+      // Fallback to browser's native text-to-speech if the API fails
+      if ('speechSynthesis' in window) {
+        console.log('Falling back to browser text-to-speech');
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          window.speechSynthesis.speak(utterance);
+          
+          // We can't return a URL for native TTS, but we can prevent the error state
+          toast.success('Playing audio via browser fallback');
+          return null; // Return null so the UI doesn't expect an audio blob to play
+        } catch (fallbackErr) {
+          console.error('Fallback TTS also failed:', fallbackErr);
+        }
+      }
+
       const errorMsg = err.message || 'Unknown error occurred';
       setError(errorMsg);
       toast.error(`Speech generation failed: ${errorMsg}`);

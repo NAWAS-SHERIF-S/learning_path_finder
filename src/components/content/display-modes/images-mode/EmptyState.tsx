@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 interface EmptyStateProps {
   onGenerateClick: () => void;
   onGeneratePrompts?: () => void;
+  onSelectType?: (type: string) => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ onGenerateClick, onGeneratePrompts }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ onGenerateClick, onGeneratePrompts, onSelectType }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -54,17 +55,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ onGenerateClick, onGener
         {/* Visual examples preview */}
         <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
           {[
-            { label: 'Architecture' },
-            { label: 'Mind Map' },
-            { label: 'Process Flow' },
-            { label: 'Concepts' },
+            { label: 'Architecture', prompt: 'Create an architecture diagram for ' },
+            { label: 'Mind Map', prompt: 'Create a comprehensive mind map covering ' },
+            { label: 'Process Flow', prompt: 'Draw a step-by-step process flow for ' },
+            { label: 'Concepts', prompt: 'Illustrate the key concepts of ' },
           ].map((type, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 * index }}
-              className="p-3 rounded-lg border border-brand-primary/20 bg-brand-primary/5"
+              onClick={() => onSelectType && onSelectType(type.prompt)}
+              className="p-3 rounded-lg border border-brand-primary/20 bg-brand-primary/5 hover:bg-brand-primary/10 cursor-pointer transition-colors"
             >
               <div className="text-xs text-gray-700 text-center font-medium">{type.label}</div>
             </motion.div>

@@ -60,6 +60,9 @@ const ImagesModeDisplay: React.FC<ImagesModeDisplayProps> = ({
         <EmptyState
           onGenerateClick={() => setShowSuggestionsModal(true)}
           onGeneratePrompts={handleGeneratePrompts}
+          onSelectType={async (promptPrefix) => {
+            await handleGenerateCustomImage(undefined, promptPrefix + topic);
+          }}
         />
         <PromptSuggestionsModal
           isOpen={showSuggestionsModal}

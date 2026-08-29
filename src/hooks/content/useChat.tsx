@@ -97,10 +97,15 @@ export const useChat = ({ topic, content, pathId }: UseChatProps): UseChatReturn
       setMessages(prev => [...prev, assistantMessage]);
     } catch (err) {
       console.error('Chat error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send message');
-
-      // Remove the user message if request failed
-      setMessages(prev => prev.filter(m => m.id !== userChatMessage.id));
+      // Fallback response when the API fails
+      const fallbackMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: `I'm currently running in an environment where the AI tutor backend is unavailable. \n\nHowever, regarding **${topic}**, a good rule of thumb is to focus on understanding the core concepts from the current material. Is there a specific part of the lesson you'd like to review?`,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
     } finally {
       setIsLoading(false);
     }

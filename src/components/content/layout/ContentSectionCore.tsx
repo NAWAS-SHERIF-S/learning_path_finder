@@ -12,6 +12,12 @@ import { useContentModeToggle } from "@/hooks/content/useContentModeToggle";
 import { useContentProgress } from "@/hooks/content/useContentProgress";
 import { ContentProgressIndicator } from "../navigation/ContentProgressIndicator";
 import AILoadingState from "@/components/ai/AILoadingState";
+import MentalModelsMode from "../interactive-modes/MentalModelsMode";
+import SocraticMode from "../interactive-modes/SocraticMode";
+import ExamplesMode from "../interactive-modes/ExamplesMode";
+import PracticeMode from "../interactive-modes/PracticeMode";
+import StoryMode from "../interactive-modes/StoryMode";
+import ImagesModeDisplay from "../display-modes/ImagesModeDisplay";
 
 interface ContentSectionCoreProps {
   loadedDetailedContent: string;
@@ -150,17 +156,35 @@ const ContentSectionCore = ({
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
             <AILoadingState 
               variant="animated" 
-              message="Transforming content for you..."
+              message="Loading interactive experience..."
             />
           </div>
         )}
 
-        <SafeReactMarkdown 
-          remarkPlugins={[remarkGfm]}
-          components={markdownComponents}
-        >
-          {processedContent}
-        </SafeReactMarkdown>
+        {activeModes.length > 0 ? (
+          <div className="my-6 min-h-[400px] animation-fade-in">
+            {activeModes[0] === 'mental_models' && <MentalModelsMode topic={topic || 'this topic'} />}
+            {activeModes[0] === 'socratic' && <SocraticMode topic={topic || 'this topic'} />}
+            {activeModes[0] === 'worked_examples' && <ExamplesMode topic={topic || 'this topic'} />}
+            {activeModes[0] === 'active_practice' && <PracticeMode topic={topic || 'this topic'} />}
+            {activeModes[0] === 'story_mode' && <StoryMode topic={topic || 'this topic'} />}
+            {activeModes[0] === 'visual_summary' && (
+              <ImagesModeDisplay 
+                topic={topic || 'this topic'} 
+                title={title || ''} 
+                stepId={stepId || ''} 
+                pathId={pathId || ''} 
+              />
+            )}
+          </div>
+        ) : (
+          <SafeReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {processedContent}
+          </SafeReactMarkdown>
+        )}
         
         {/* Related questions at the bottom of content */}
         {topic && (

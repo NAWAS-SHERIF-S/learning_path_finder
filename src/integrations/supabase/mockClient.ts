@@ -764,6 +764,73 @@ export const mockSupabase = {
         }
       }
 
+      // Voice processing functions
+      if (name === 'text-to-speech' || name === 'openai-tts') {
+        const text = body.text || 'Sample audio text';
+        return {
+          data: {
+            audioUrl: 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg',
+            message: `Generated audio for: ${text.substring(0, 20)}...`
+          },
+          error: null
+        };
+      }
+
+      // Mental model / Image generation
+      if (name === 'generate-mental-model-images' || name === 'generate-path-mental-models') {
+        const topic = body.topic || 'learning';
+        return {
+          data: {
+            success: true,
+            data: [
+              {
+                id: `mock-img-${Date.now()}-1`,
+                path_id: body.pathId || 'mock',
+                type: 'architecture',
+                title: `${topic} Architecture`,
+                description: `Architecture of ${topic}`,
+                image_url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97',
+                prompt: body.prompt || `A diagram of ${topic}`
+              },
+              {
+                id: `mock-img-${Date.now()}-2`,
+                path_id: body.pathId || 'mock',
+                type: 'mind_map',
+                title: `${topic} Mind Map`,
+                description: `Mind map of ${topic}`,
+                image_url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa',
+                prompt: `Mind map for ${topic}`
+              }
+            ]
+          },
+          error: null
+        };
+      }
+
+      // Chat Tutor
+      if (name === 'chat-tutor') {
+        if (body.generatePrompts) {
+          return {
+            data: {
+              suggestedPrompts: [
+                "What are the core concepts here?",
+                "Can you give me a practical example?",
+                "How does this relate to what I've learned?",
+                "Can you explain this simply?"
+              ]
+            },
+            error: null
+          };
+        }
+        
+        return {
+          data: {
+            response: `This is a simulated AI tutor response for your question: "${body.message}". In production, this provides contextual help based on the current topic.`
+          },
+          error: null
+        };
+      }
+
       // 2. generate-learning-content
       if (name === 'generate-learning-content') {
         const stepId = body.stepId;
