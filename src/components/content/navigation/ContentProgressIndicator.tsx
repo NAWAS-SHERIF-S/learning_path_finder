@@ -22,7 +22,7 @@ export const ContentProgressIndicator: React.FC<ContentProgressIndicatorProps> =
 
   return (
     <div className={cn(
-      "hidden lg:block fixed right-8 top-1/2 -translate-y-1/2 z-10",
+      "hidden 2xl:block fixed left-8 top-1/2 -translate-y-1/2 z-10",
       className
     )}>
       <div className="flex flex-col items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full p-3 shadow-lg border border-brand-purple/10">
