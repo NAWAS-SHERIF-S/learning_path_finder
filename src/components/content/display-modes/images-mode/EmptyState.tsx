@@ -55,17 +55,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ onGenerateClick, onGener
         {/* Visual examples preview */}
         <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
           {[
-            { label: 'Architecture', prompt: 'Create an architecture diagram for ' },
-            { label: 'Mind Map', prompt: 'Create a comprehensive mind map covering ' },
-            { label: 'Process Flow', prompt: 'Draw a step-by-step process flow for ' },
-            { label: 'Concepts', prompt: 'Illustrate the key concepts of ' },
+            { id: 'architecture', label: 'Architecture' },
+            { id: 'mind_map', label: 'Mind Map' },
+            { id: 'process_flow', label: 'Process Flow' },
+            { id: 'concepts', label: 'Concepts' },
           ].map((type, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 * index }}
-              onClick={() => onSelectType && onSelectType(type.prompt)}
+              onClick={() => onSelectType && onSelectType(type.id)}
               className="p-3 rounded-lg border border-brand-primary/20 bg-brand-primary/5 hover:bg-brand-primary/10 cursor-pointer transition-colors"
             >
               <div className="text-xs text-gray-700 text-center font-medium">{type.label}</div>
