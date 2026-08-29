@@ -11,7 +11,7 @@ export const HomeFooter = () => {
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
             <a
-              href="https://github.com/Enterprise-DNA-OS/ai-learning-path-generator"
+              href="https://github.com/NAWAS-SHERIF-S/learning_path_finder"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -19,7 +19,7 @@ export const HomeFooter = () => {
               GitHub
             </a>
             <a
-              href="https://github.com/Enterprise-DNA-OS/ai-learning-path-generator#readme"
+              href="https://github.com/NAWAS-SHERIF-S/learning_path_finder#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -27,7 +27,7 @@ export const HomeFooter = () => {
               Docs
             </a>
             <a
-              href="https://github.com/Enterprise-DNA-OS/ai-learning-path-generator/issues"
+              href="https://github.com/NAWAS-SHERIF-S/learning_path_finder/issues"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-primary transition-colors"

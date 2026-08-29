@@ -85,7 +85,7 @@ export function MainNav({ className }: MainNavProps) {
               Community
             </Link>
             <a
-              href="https://github.com/Enterprise-DNA-OS/ai-learning-path-generator"
+              href="https://github.com/NAWAS-SHERIF-S/learning_path_finder"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
@@ -168,7 +168,7 @@ export function MainNav({ className }: MainNavProps) {
                   <span>Community</span>
                 </Link>
                 <a
-                  href="https://github.com/Enterprise-DNA-OS/ai-learning-path-generator"
+                  href="https://github.com/NAWAS-SHERIF-S/learning_path_finder"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 py-2 px-4 rounded-md hover:bg-secondary"

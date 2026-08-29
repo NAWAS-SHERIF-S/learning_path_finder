@@ -71,7 +71,7 @@ See `CLAUDE.md` and `AGENTS.md` for detailed architecture documentation.
 
 ### Before You Start
 
-1. Check existing [issues](https://github.com/Enterprise-DNA-OS/ai-learning-path-generator/issues) for the feature/bug
+1. Check existing [issues](https://github.com/NAWAS-SHERIF-S/learning_path_finder/issues) for the feature/bug
 2. Open an issue to discuss significant changes before implementing
 3. Read `CLAUDE.md` for coding conventions and patterns
 

@@ -2,13 +2,13 @@
   "name": "ai-learning-path-generator",
   "version": "1.0.0",
   "description": "AI-powered learning platform that generates personalized, project-based learning pathways for any skill with adaptive AI guidance and progress tracking.",
-  "homepage": "https://github.com/Enterprise-DNA-OS/ai-learning-path-generator",
+  "homepage": "https://github.com/NAWAS-SHERIF-S/learning_path_finder",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Enterprise-DNA-OS/ai-learning-path-generator.git"
+    "url": "git+https://github.com/NAWAS-SHERIF-S/learning_path_finder.git"
   },
   "bugs": {
-    "url": "https://github.com/Enterprise-DNA-OS/ai-learning-path-generator/issues"
+    "url": "https://github.com/NAWAS-SHERIF-S/learning_path_finder/issues"
   },
   "author": "Team techQ",
   "license": "MIT",

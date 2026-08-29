@@ -175,7 +175,7 @@ Enterprise DNA is committed to demonstrating that AI tools are not just producti
 ### Step 1: Clone and Install
 
 ```bash
-git clone https://github.com/Enterprise-DNA-OS/ai-learning-path-generator.git
+git clone https://github.com/NAWAS-SHERIF-S/learning_path_finder.git
 cd ai-learning-path-generator
 npm install
 ```
