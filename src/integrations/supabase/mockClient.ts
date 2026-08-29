@@ -712,6 +712,56 @@ export const mockSupabase = {
             error: null
           };
         }
+
+        if (action === 'generate-deep-dive-topics') {
+          const topic = body.topic || 'Unknown Topic';
+          return {
+            data: {
+              topics: [
+                {
+                  id: '1',
+                  title: `Advanced ${topic} Concepts`,
+                  description: `Deep dive into advanced concepts related to ${topic}`,
+                  similarity: 0.95
+                },
+                {
+                  id: '2',
+                  title: `${topic} Best Practices`,
+                  description: `Learn the industry best practices for ${topic}`,
+                  similarity: 0.88
+                },
+                {
+                  id: '3',
+                  title: `${topic} Performance Tuning`,
+                  description: `Optimize your ${topic} implementation`,
+                  similarity: 0.82
+                }
+              ]
+            },
+            error: null
+          };
+        }
+
+        if (action === 'generate-deep-dive-content') {
+          const title = body.title || 'Topic';
+          return {
+            data: {
+              content: `# Deep Dive: ${title}\n\nThis is a detailed deep dive into ${title}. We explore advanced patterns, architecture, and practical implementations.\n\n## Core Architecture\n\nThe architecture relies on robust principles.\n\n## Example\n\n\`\`\`javascript\nconst example = true;\nconsole.log(example);\n\`\`\``
+            },
+            error: null
+          };
+        }
+
+        if (action === 'learning-modes-transform') {
+          const mode = body.mode || 'default';
+          const title = body.title || 'Topic';
+          return {
+            data: {
+              content: `# ${title} (${mode.toUpperCase()} MODE)\n\nThis content has been transformed into ${mode} mode.\n\nHere are some alternative perspectives and specialized examples tailored to this learning style.`
+            },
+            error: null
+          };
+        }
       }
 
       // 2. generate-learning-content
